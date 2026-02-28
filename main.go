@@ -1,31 +1,31 @@
 package main
 
 import (
+	"biblioteca-go/handlers"
 	"fmt"
-
-	"biblioteca-go/libros"
-	"biblioteca-go/reportes"
-	"biblioteca-go/reservas"
-	"biblioteca-go/usuarios"
+	"net/http"
 )
 
 func main() {
 
-	usuario := usuarios.NewUsuario(1, "Francisco", "Piedra")
-	libro := libros.NewLibro("Go Básico", "Autor X", 2)
+	mux := http.NewServeMux()
 
-	reserva := &reservas.Reserva{
-		Usuario: usuario,
-		Libro:   libro,
-	}
+	// Servir página web
+	mux.Handle("/", http.FileServer(http.Dir("./web")))
 
-	gestor := reservas.NewGestionReservas()
+	// Rutas API
+	mux.HandleFunc("/usuarios", handlers.CrearUsuario)
+	mux.HandleFunc("/usuarios/listar", handlers.ListarUsuarios)
 
-	if err := gestor.RegistrarReserva(reserva); err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
+	mux.HandleFunc("/libros", handlers.CrearLibro)
+	mux.HandleFunc("/libros/listar", handlers.ListarLibros)
 
-	fmt.Println("Reserva realizada para:", usuario.NombreCompleto())
-	fmt.Println("Total de reservas:", reportes.TotalReservas(gestor.ListarReservas()))
+	mux.HandleFunc("/reservas", handlers.CrearReserva)
+	mux.HandleFunc("/reservas/listar", handlers.ListarReservas)
+
+	mux.HandleFunc("/reportes/total", handlers.TotalReservas)
+	mux.HandleFunc("/reportes/libros", handlers.LibrosDisponibles)
+
+	fmt.Println("Servidor corriendo en http://localhost:8080")
+	http.ListenAndServe(":8080", mux)
 }
